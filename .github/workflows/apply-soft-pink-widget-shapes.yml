@@ -1,0 +1,102 @@
+name: Apply soft pink widget shapes
+
+on:
+  push:
+    paths:
+      - '.github/widget-style-trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch soft pink widgets
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          marker = '/* soft-pink distinct horizontal widgets */'
+          css = r'''
+
+          /* soft-pink distinct horizontal widgets */
+          body.theme-soft-pink .primary-widget-top,
+          body.theme-soft-pink .primary-widget-bottom{
+            border:1px solid rgba(255,255,255,.52);
+            overflow:hidden;
+            box-shadow:0 10px 26px rgba(104,112,91,.10);
+            backdrop-filter:blur(9px);
+            -webkit-backdrop-filter:blur(9px);
+          }
+
+          body.theme-soft-pink .primary-widget-top{
+            border-radius:999px;
+            background:
+              radial-gradient(circle at 12% 74%, rgba(255,255,255,.28) 0 5px, transparent 6px),
+              radial-gradient(circle at 48% 30%, rgba(255,255,255,.24) 0 6px, transparent 7px),
+              radial-gradient(circle at 86% 24%, rgba(255,255,255,.22) 0 4px, transparent 5px),
+              rgba(255,255,255,.16);
+          }
+
+          body.theme-soft-pink .primary-widget-top::before{
+            content:'G';
+            position:absolute;
+            left:clamp(22px,4vw,30px);
+            top:50%;
+            transform:translateY(-51%);
+            color:#B7C59B;
+            font-size:clamp(42px,7vw,58px);
+            font-weight:700;
+            line-height:1;
+            letter-spacing:-.05em;
+          }
+
+          body.theme-soft-pink .primary-widget-bottom{
+            border-radius:clamp(22px,4.6vw,30px);
+            background:
+              radial-gradient(circle at 9% 18%, rgba(255,255,255,.22) 0 5px, transparent 6px),
+              radial-gradient(circle at 44% 27%, rgba(255,255,255,.18) 0 4px, transparent 5px),
+              radial-gradient(circle at 78% 34%, rgba(255,255,255,.18) 0 4px, transparent 5px),
+              linear-gradient(142deg, rgba(255,255,255,.18) 0 54%, rgba(132,170,96,.68) 54.5% 100%);
+          }
+
+          body.theme-soft-pink .primary-widget-bottom::before{
+            content:'59%';
+            position:absolute;
+            left:clamp(18px,3vw,24px);
+            bottom:clamp(12px,2.4vw,18px);
+            color:#fff;
+            font-size:clamp(42px,7.5vw,62px);
+            font-weight:300;
+            line-height:.9;
+            letter-spacing:-.05em;
+          }
+
+          body.theme-soft-pink .primary-widget-bottom::after{
+            content:'▂▃▂▅▄';
+            position:absolute;
+            right:clamp(16px,2.8vw,24px);
+            bottom:clamp(10px,2vw,16px);
+            color:#fff;
+            font-family:Arial,sans-serif;
+            font-size:clamp(28px,5vw,42px);
+            font-weight:900;
+            line-height:1;
+            letter-spacing:clamp(1px,.6vw,5px);
+            white-space:nowrap;
+          }
+          '''
+          if marker not in text:
+              text = text.replace('</style>', css + '\n</style>', 1)
+              p.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Differentiate soft pink horizontal widgets"
+          git push
