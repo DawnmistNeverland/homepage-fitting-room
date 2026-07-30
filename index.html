@@ -1,0 +1,1471 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<script>
+  (() => {
+    const colors = ['#f9f9f7', '#d9785a', '#F7F5F0', '#B25A42', '#16181D', '#FFFFFF', '#F8F1EF'];
+    const match = location.hash.match(/^#palette-(\d+)$/);
+    let index = match ? Number(match[1]) : 0;
+
+    if (!Number.isInteger(index) || index < 0 || index >= colors.length) index = 0;
+
+    window.__initialPaletteIndex = index;
+    document.documentElement.style.setProperty('--status-bar-bg', colors[index]);
+    document.documentElement.style.backgroundColor = colors[index];
+    document.write(`<meta name="theme-color" content="${colors[index]}">`);
+  })();
+</script>
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>首页试衣间 · 计时器上移版</title>
+<style>
+  :root{
+    --bg:#d9785a;
+    --paper:#eeeee7;
+    --wallpaper-striped:linear-gradient(to bottom,
+      var(--bg) 0%,
+      var(--bg) 28.1%,
+      var(--paper) 28.1%,
+      var(--paper) 43.8%,
+      var(--bg) 43.8%,
+      var(--bg) 66.4%,
+      var(--paper) 66.4%,
+      var(--paper) 84.0%,
+      var(--bg) 84.0%,
+      var(--bg) 100%);
+    --page-width:707px;
+    --grid-width:640px;
+    --page-pad:clamp(24px, 4.4vw, 36px);
+    --row-gap:clamp(18px, 3dvh, 26px);
+
+    /* 组件外观统一由变量控制；主题只改变量，不直接覆盖组件选择器 */
+    --hero-bg:#d2a07f;
+    --hero-image:none;
+    --icon-bg:#d87356;
+    --quad-image:none;
+    --widget-bg:#e6dfd0;
+    --widget-alt-bg:#d9ae8c;
+    --search-bg:#ffd9cd;
+    --component-border:0 solid transparent;
+    --component-filter:none;
+    --hero-shadow:0 9px 20px rgba(44,31,24,.10);
+    --icon-shadow:0 9px 20px rgba(44,31,24,.10);
+    --widget-shadow:0 9px 20px rgba(44,31,24,.10);
+    --tiny-shadow:none;
+    --search-shadow:0 8px 18px rgba(44,31,24,.08);
+
+    --dock-svg-bg:rgba(255,255,255,.42);
+    --dock-svg-stroke:rgba(255,255,255,.52);
+    --dock-icon-stroke:transparent;
+    --dock-icon-stroke-width:0;
+
+    --label-color:#fff;
+    --label-shadow:0 2px 8px rgba(0,0,0,.18);
+    --name-color:rgba(0,0,0,.56);
+    --size-color:rgba(0,0,0,.84);
+    --icon-name-color:rgba(255,255,255,.78);
+    --icon-size-color:#fff;
+    --icon-size-shadow:0 1px 3px rgba(0,0,0,.18);
+    --dock-size-color:rgba(0,0,0,.65);
+    --search-color:rgba(0,0,0,.84);
+
+    /* 雪花只保留一份图形，颜色由变量切换 */
+    --star-fill-main:#FAF9F4;
+    --star-fill-soft:#FDFCF9;
+    --star-fill-light:#FFFFFE;
+    --star-line:#FAF9F4;
+    --star-opacity:1;
+
+    --icon-max:76px;
+    --slot-size:var(--icon-max);
+    --icon-visual-size:calc(var(--slot-size) - 4px);
+
+    --hero-h:clamp(166px, 31vw, 232px);
+    --side-h:min(clamp(72px, 19vw, 126px), calc(var(--icon-max) + var(--row-gap)));
+    --dark-widget-lift:max(0px, calc(var(--side-h) - var(--icon-max)));
+    --dock-extend:clamp(24px, 6.8vw, 40px);
+    --dock-max:500px;
+
+    --safe-top:env(safe-area-inset-top,0px);
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+    --status-bar-bg:#f9f9f7;
+    /* iOS 全屏 PWA 视口短高补偿:由 JS 实测赋值,正常环境恒为 0 */
+    --vp-fix:0px;
+  }
+
+  /* 三套新增玻璃主题：这里只定义变量，不直接修改任何组件选择器 */
+  body.theme-celestial-day{
+    --text-main:#1A1C1A;
+    --text-sub:#7A7C7A;
+    --glass-bg:rgba(255,255,255,.45);
+    --glass-border:rgba(0,0,0,.06);
+    --glass-shadow:0 8px 32px rgba(0,0,0,.03);
+    --hero-bg:var(--glass-bg);
+    --icon-bg:var(--glass-bg);
+    --widget-bg:var(--glass-bg);
+    --widget-alt-bg:var(--glass-bg);
+    --search-bg:var(--glass-bg);
+    --component-border:1px solid var(--glass-border);
+    --component-filter:blur(20px);
+    --hero-shadow:var(--glass-shadow);
+    --icon-shadow:var(--glass-shadow);
+    --widget-shadow:var(--glass-shadow);
+    --tiny-shadow:var(--glass-shadow);
+    --search-shadow:var(--glass-shadow);
+    --dock-svg-bg:var(--glass-bg);
+    --dock-svg-stroke:var(--glass-border);
+    --dock-icon-stroke:var(--glass-border);
+    --dock-icon-stroke-width:1.4;
+    --label-color:var(--text-main);
+    --label-shadow:none;
+    --name-color:var(--text-sub);
+    --size-color:var(--text-main);
+    --icon-name-color:var(--text-sub);
+    --icon-size-color:var(--text-main);
+    --icon-size-shadow:none;
+    --dock-size-color:var(--text-sub);
+    --search-color:var(--text-sub);
+    --star-fill-main:#B96549;
+    --star-fill-soft:#D39F8D;
+    --star-fill-light:#DFB8AB;
+    --star-line:#D17B3F;
+    --star-opacity:.95;
+  }
+
+  body.theme-celestial-dusk{
+    --text-main:#FDFBF7;
+    --text-sub:rgba(253,251,247,.7);
+    --glass-bg:rgba(255,255,255,.12);
+    --glass-border:rgba(255,255,255,.15);
+    --glass-shadow:0 8px 32px rgba(0,0,0,.03);
+    --hero-bg:var(--glass-bg);
+    --icon-bg:var(--glass-bg);
+    --widget-bg:var(--glass-bg);
+    --widget-alt-bg:var(--glass-bg);
+    --search-bg:var(--glass-bg);
+    --component-border:1px solid var(--glass-border);
+    --component-filter:blur(20px);
+    --hero-shadow:var(--glass-shadow);
+    --icon-shadow:var(--glass-shadow);
+    --widget-shadow:var(--glass-shadow);
+    --tiny-shadow:var(--glass-shadow);
+    --search-shadow:var(--glass-shadow);
+    --dock-svg-bg:var(--glass-bg);
+    --dock-svg-stroke:var(--glass-border);
+    --dock-icon-stroke:var(--glass-border);
+    --dock-icon-stroke-width:1.4;
+    --label-color:var(--text-main);
+    --label-shadow:none;
+    --name-color:var(--text-sub);
+    --size-color:var(--text-main);
+    --icon-name-color:var(--text-sub);
+    --icon-size-color:var(--text-main);
+    --icon-size-shadow:none;
+    --dock-size-color:var(--text-sub);
+    --search-color:var(--text-sub);
+    --star-opacity:.95;
+  }
+
+  body.theme-celestial-night{
+    --text-main:#F4F5F6;
+    --text-sub:#8B909A;
+    --glass-bg:rgba(255,255,255,.05);
+    --glass-border:rgba(255,255,255,.08);
+    --glass-shadow:0 8px 32px rgba(0,0,0,.03);
+    --hero-bg:var(--glass-bg);
+    --icon-bg:var(--glass-bg);
+    --widget-bg:var(--glass-bg);
+    --widget-alt-bg:var(--glass-bg);
+    --search-bg:var(--glass-bg);
+    --component-border:1px solid var(--glass-border);
+    --component-filter:blur(20px);
+    --hero-shadow:var(--glass-shadow);
+    --icon-shadow:var(--glass-shadow);
+    --widget-shadow:var(--glass-shadow);
+    --tiny-shadow:var(--glass-shadow);
+    --search-shadow:var(--glass-shadow);
+    --dock-svg-bg:var(--glass-bg);
+    --dock-svg-stroke:var(--glass-border);
+    --dock-icon-stroke:var(--glass-border);
+    --dock-icon-stroke-width:1.4;
+    --label-color:var(--text-main);
+    --label-shadow:none;
+    --name-color:var(--text-sub);
+    --size-color:var(--text-main);
+    --icon-name-color:var(--text-sub);
+    --icon-size-color:var(--text-main);
+    --icon-size-shadow:none;
+    --dock-size-color:var(--text-sub);
+    --search-color:var(--text-sub);
+    --star-opacity:.95;
+  }
+
+  /* 白底柔粉主题：Dock 取图一灰色，其余组件取图二粉色 */
+  body.theme-soft-pink{
+    --text-main:#4A4446;
+    --text-sub:#81787B;
+    --hero-bg:#FEF4F4;
+    --hero-image:url("./IMG_2.JPG");
+    --icon-bg:#FEF4F4;
+    --quad-image:url("./IMG_1.JPG");
+    --widget-bg:#FEF4F4;
+    --widget-alt-bg:#FEF4F4;
+    --search-bg:#FEF4F4;
+    --component-border:1px solid rgba(74,68,70,.04);
+    --component-filter:none;
+    --hero-shadow:0 9px 20px rgba(74,68,70,.07);
+    --icon-shadow:0 9px 20px rgba(74,68,70,.07);
+    --widget-shadow:0 9px 20px rgba(74,68,70,.07);
+    --tiny-shadow:0 9px 20px rgba(74,68,70,.07);
+    --search-shadow:0 8px 18px rgba(74,68,70,.06);
+    --dock-svg-bg:#D8D8D8;
+    --dock-svg-stroke:rgba(74,68,70,.06);
+    --dock-icon-stroke:rgba(74,68,70,.04);
+    --dock-icon-stroke-width:1.4;
+    --label-color:var(--text-main);
+    --label-shadow:none;
+    --name-color:var(--text-sub);
+    --size-color:var(--text-main);
+    --icon-name-color:var(--text-sub);
+    --icon-size-color:var(--text-main);
+    --icon-size-shadow:none;
+    --dock-size-color:var(--text-sub);
+    --search-color:var(--text-sub);
+    --star-fill-main:#FFFFFF;
+    --star-fill-soft:#FFF9F9;
+    --star-fill-light:#FFFFFF;
+    --star-line:#FFFFFF;
+    --star-opacity:1;
+  }
+
+  /* 花间晨雾主题：背景图直接外链项目根目录的 IMG_flower.JPG */
+  body.theme-flower{
+    --text-main:#4D3040;
+    --text-sub:#745766;
+    --glass-bg:rgba(255,248,249,.58);
+    --glass-border:rgba(255,255,255,.58);
+    --glass-shadow:0 12px 34px rgba(73,39,55,.14);
+    --hero-bg:var(--glass-bg);
+    --icon-bg:rgba(246,221,229,.68);
+    --widget-bg:var(--glass-bg);
+    --widget-alt-bg:rgba(226,196,207,.68);
+    --search-bg:rgba(255,248,249,.72);
+    --component-border:1px solid var(--glass-border);
+    --component-filter:blur(18px) saturate(1.12);
+    --hero-shadow:var(--glass-shadow);
+    --icon-shadow:0 10px 26px rgba(73,39,55,.12);
+    --widget-shadow:var(--glass-shadow);
+    --tiny-shadow:0 10px 26px rgba(73,39,55,.12);
+    --search-shadow:0 8px 22px rgba(73,39,55,.11);
+    --dock-svg-bg:rgba(255,248,249,.64);
+    --dock-svg-stroke:rgba(255,255,255,.62);
+    --dock-icon-stroke:rgba(255,255,255,.48);
+    --dock-icon-stroke-width:1.4;
+    --label-color:#533344;
+    --label-shadow:0 1px 8px rgba(255,255,255,.76);
+    --name-color:var(--text-sub);
+    --size-color:var(--text-main);
+    --icon-name-color:var(--text-sub);
+    --icon-size-color:var(--text-main);
+    --icon-size-shadow:none;
+    --dock-size-color:var(--text-sub);
+    --search-color:var(--text-sub);
+    --star-fill-main:#8C4866;
+    --star-fill-soft:#B76887;
+    --star-fill-light:#D29AB0;
+    --star-line:#8C4866;
+    --star-opacity:.96;
+  }
+
+  /* v7：四个主图标共用一个外容器 */
+  .quad-icon-container{
+    display:block;
+    grid-column:1 / 3;
+    grid-row:1;
+    width:calc(100% - 4px);
+    aspect-ratio:1 / 1;
+    justify-self:center;
+    border:var(--component-border);
+    border-radius:clamp(20px, 4.7vw, 28px);
+    background-color:var(--icon-bg);
+    background-image:var(--quad-image);
+    background-position:center;
+    background-size:cover;
+    background-repeat:no-repeat;
+    box-shadow:var(--icon-shadow);
+    overflow:hidden;
+    z-index:0;
+  }
+
+  .primary-composite{
+    position:relative;
+    align-items:stretch;
+  }
+
+  .primary-widget-stack{
+    grid-column:3 / 5;
+    grid-row:1;
+    position:relative;
+    align-self:stretch;
+    min-width:0;
+  }
+
+  .primary-widget-stack .side-widget{
+    position:absolute;
+    left:0;
+    width:100%;
+    height:44%;
+    margin-top:0;
+  }
+
+  .primary-widget-top{
+    top:0;
+  }
+
+  .primary-widget-bottom{
+    bottom:0;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+  html{
+    margin:0;
+    width:100%;
+    height:calc(100% + var(--vp-fix));
+    overflow:hidden;
+    background:var(--status-bar-bg);
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+  }
+
+  body{
+    margin:0;
+    width:100%;
+    height:calc(100% + var(--vp-fix));
+    overflow:hidden;
+    background:var(--status-bar-bg);
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Arial,sans-serif;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+    transition:background .24s ease;
+  }
+
+  /* 状态栏安全区随主题融入页面背景 */
+  body::before{
+    content:"";
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    height:var(--safe-top);
+    z-index:50;
+    background:var(--status-bar-bg);
+    pointer-events:none;
+    transition:background-color .24s ease;
+  }
+
+  .app{
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    height:calc(100% + var(--vp-fix));
+    overflow:hidden;
+    background:transparent;
+  }
+
+  /* 横滑视口：只负责左右滑，背景由 body 直接承载 */
+  .swipe-viewport{
+    position:absolute;
+    inset:0;
+    z-index:1;
+    overflow:hidden;
+    background:transparent;
+    touch-action:auto;
+  }
+
+  /* 横滑轨道：后期新增页面时，复制完整 .page-panel 到这里；不要放空页，否则会滑到空壁纸 */
+  .page-track{
+    width:100%;
+    height:100%;
+    display:flex;
+    overflow-x:auto;
+    overflow-y:visible;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    background:transparent;
+    touch-action:pan-x pan-y;
+  }
+
+  .page-track::-webkit-scrollbar{display:none}
+
+  .page-panel{
+    flex:0 0 100%;
+    width:100%;
+    height:100%;
+    min-height:100%;
+    overflow-x:hidden;
+    overflow-y:auto;
+    scroll-snap-align:start;
+    background:transparent;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-y:auto;
+    touch-action:pan-y pan-x;
+  }
+
+  .page-panel::-webkit-scrollbar{display:none}
+
+  /* 页面内容容器：电脑不无限放大，手机占满 */
+  .page-content{
+    width:min(100%, var(--page-width));
+    min-height:100%;
+    margin:0 auto;
+    padding:calc(var(--safe-top) + 18px) var(--page-pad) 12px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* 唯一组件网格：所有组件都用它 */
+  /*
+    全局组件对齐规则：
+    .component-grid 是唯一主组件轨道；
+    4 个 slot 左右贴边、均匀分布；
+    图标组件占单个 slot；
+    中组件固定跨第 3-4 个 slot；
+    顶部大组件和 Dock 固定跨第 1-4 个 slot。
+    Dock 外壳允许通过 --dock-extend 外扩，但内部图标仍按 slot 对齐。
+  */
+
+  .component-grid{
+    width:min(100%, var(--grid-width));
+    margin-left:auto;
+    margin-right:auto;
+    display:grid;
+    grid-template-columns:repeat(4, var(--slot-size));
+    justify-content:space-between;
+    column-gap:0;
+    align-items:start;
+  }
+
+
+  .hero-frame{
+    grid-column:1 / 5;
+    width:100%;
+    height:var(--hero-h);
+    position:relative;
+    filter:drop-shadow(var(--hero-shadow));
+    transform:translateY(4px);
+  }
+
+  .hero-frame .hero{
+    grid-column:auto;
+    width:100%;
+    height:100%;
+    border:0;
+    border-radius:0;
+    background-color:var(--hero-bg);
+    background-image:var(--hero-image);
+    background-position:center;
+    background-size:cover;
+    background-repeat:no-repeat;
+    backdrop-filter:var(--component-filter);
+    -webkit-backdrop-filter:var(--component-filter);
+    box-shadow:none;
+    transform:none;
+    clip-path:url("#concaveHeroClip");
+    -webkit-clip-path:url("#concaveHeroClip");
+  }
+
+  .hero-counter-stage{
+    display:none;
+    width:min(100%, var(--grid-width));
+    min-height:clamp(90px, 20vw, 126px);
+    margin:0 auto clamp(12px, 2dvh, 18px);
+    padding-left:clamp(4px, 1vw, 8px);
+    align-items:flex-end;
+    justify-content:flex-start;
+  }
+
+  body.theme-soft-pink .hero-counter-stage{
+    display:flex;
+  }
+
+  .hero-counter-stage .hero-counter{
+    align-items:flex-start;
+    text-align:left;
+  }
+
+  .hero-counter-stage .hero-counter-caption{
+    margin-left:clamp(4px, 1vw, 8px);
+  }
+
+  .hero-feature{
+    position:absolute;
+    inset:0;
+    z-index:2;
+    display:none;
+    grid-template-columns:minmax(0, 1fr);
+    align-items:center;
+    gap:0;
+    padding:clamp(20px, 4.8vw, 38px);
+  }
+
+  body.theme-soft-pink .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:1;
+    background:linear-gradient(90deg, rgba(70,55,59,.18) 0%, rgba(255,255,255,.02) 54%, rgba(255,255,255,.08) 100%);
+    pointer-events:none;
+  }
+
+  body.theme-soft-pink .hero-feature{
+    display:grid;
+  }
+
+  .hero-greeting{
+    min-width:0;
+    height:2.16em;
+    color:rgba(255,255,255,.96);
+    font-family:"Snell Roundhand","Apple Chancery",cursive;
+    font-size:clamp(22px, 5.6vw, 32px);
+    font-weight:600;
+    line-height:1.08;
+    letter-spacing:0;
+    text-shadow:0 2px 14px rgba(54,42,45,.24);
+  }
+
+  .hero-typewriter{
+    display:block;
+    width:100%;
+    white-space:pre;
+  }
+
+  .hero-counter{
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    color:#2F292B;
+    text-align:center;
+  }
+
+  .hero-counter-number{
+    display:block;
+    font-family:"Bodoni 72","Didot","Bodoni MT",Georgia,serif;
+    font-size:clamp(68px, 16vw, 116px);
+    font-style:italic;
+    font-weight:400;
+    line-height:.76;
+    letter-spacing:-.08em;
+    text-shadow:0 1px 10px rgba(255,255,255,.2);
+  }
+
+  .hero-counter-caption{
+    display:block;
+    margin-top:clamp(16px, 3vw, 25px);
+    color:rgba(47,41,43,.72);
+    font-size:clamp(8px, 1.7vw, 12px);
+    font-weight:700;
+    line-height:1;
+    letter-spacing:.18em;
+    white-space:nowrap;
+  }
+
+  .section-name{
+    width:min(100%, var(--grid-width));
+    margin:clamp(8px, 1.2dvh, 10px) auto clamp(8px, 1.6dvh, 12px);
+    text-align:center;
+    color:var(--label-color);
+    font-size:clamp(14px, 2.7vw, 18px);
+    line-height:1;
+    font-weight:800;
+    text-shadow:var(--label-shadow);
+  }
+
+  .row + .row{
+    margin-top:var(--row-gap);
+  }
+
+  .row.row-second{
+    margin-top:var(--row-gap);
+    padding-top:0;
+  }
+
+  .row.apps{
+    margin-top:var(--row-gap);
+  }
+
+  .top-area{
+    padding-top:clamp(0px, 2dvh, 18px);
+    margin-bottom:clamp(6px, 1.6dvh, 12px);
+  }
+
+  .middle-area{
+    margin-bottom:clamp(20px, 4dvh, 34px);
+  }
+
+  .entry{width:var(--slot-size);min-width:0;display:flex;flex-direction:column;align-items:center;text-align:center;}
+
+  .box{
+    position:relative;
+    overflow:hidden;
+  }
+
+  .icon-box{
+    width:var(--icon-visual-size);
+    aspect-ratio:1/1;
+    margin:0;
+    border:var(--component-border);
+    border-radius:clamp(18px, 4vw, 22px);
+    background:var(--icon-bg);
+    backdrop-filter:var(--component-filter);
+    -webkit-backdrop-filter:var(--component-filter);
+    box-shadow:var(--icon-shadow);
+  }
+
+  .side-widget{
+    grid-column:3 / 5;
+    width:100%;
+    height:var(--side-h);
+    border:var(--component-border);
+    border-radius:clamp(20px, 4.7vw, 28px);
+    background:var(--widget-bg);
+    backdrop-filter:var(--component-filter);
+    -webkit-backdrop-filter:var(--component-filter);
+    box-shadow:var(--widget-shadow);
+  }
+
+  .side-widget-wrap{
+    grid-column:3 / 5;
+    min-width:0;
+  }
+
+  .side-widget-wrap .side-widget{width:100%}
+
+  .side-widget.alt{
+    background:var(--widget-alt-bg);
+    margin-top:calc(var(--dark-widget-lift) * -1);
+  }
+
+  .tiny{
+    width:var(--icon-visual-size);
+    aspect-ratio:1/1;
+    margin:0;
+    border:var(--component-border);
+    border-radius:clamp(15px, 3vw, 20px);
+    background:var(--icon-bg);
+    backdrop-filter:var(--component-filter);
+    -webkit-backdrop-filter:var(--component-filter);
+    box-shadow:var(--tiny-shadow);
+  }
+
+  .label{
+    margin-top:clamp(8px, 1.3dvh, 11px);
+    text-align:center;
+    color:var(--label-color);
+    font-size:clamp(13px, 2.7vw, 17px);
+    line-height:1.05;
+    font-weight:800;
+    white-space:nowrap;
+    text-shadow:var(--label-shadow);
+  }
+
+  .entry > .icon-box + .label,
+  .entry > .tiny + .label{
+    width:var(--slot-size);
+  }
+
+  .side-widget-wrap > .label{
+    width:100%;
+  }
+
+  .fill-area{
+    flex:1 1 auto;
+    min-height:clamp(96px, 21dvh, 220px);
+    display:flex;
+    align-items:flex-end;
+    padding-bottom:clamp(14px, 3dvh, 26px);
+  }
+
+  .search{
+    grid-column:2 / 4;
+    justify-self:center;
+    width:clamp(92px, 15vw, 108px);
+    height:clamp(34px, 5.6vw, 42px);
+    border:var(--component-border);
+    border-radius:999px;
+    color:var(--search-color);
+    backdrop-filter:var(--component-filter);
+    -webkit-backdrop-filter:var(--component-filter);
+    background:var(--search-bg);
+    box-shadow:var(--search-shadow);
+  }
+  .dock-fixed{
+    position:fixed;
+    left:50%;
+    bottom:calc(-1 * var(--dock-shift, 0px));
+    z-index:30;
+    width:min(100%, var(--page-width));
+    padding-left:var(--page-pad);
+    padding-right:var(--page-pad);
+    padding-top:clamp(12px, 2.3dvh, 20px);
+    padding-bottom:0;
+    transform:translateX(-50%) translateY(0);
+    pointer-events:none;
+  }
+
+  .dock-fixed .dock,
+  .dock-fixed .dock-hit,
+  .dock-fixed .search,
+  .dock-fixed #paletteToggle{
+    pointer-events:auto;
+  }
+
+  /* 搜索胶囊:悬在 dock 上方的固定件,与内容层脱钩,不随视口抖动 */
+  .search-row{
+    margin-bottom:clamp(26px, 4dvh, 40px);
+  }
+
+  .dock{
+    grid-column:1 / 5;
+    width:min(calc(100% + var(--dock-extend) * 2), var(--dock-max));
+    aspect-ratio:860 / 330;
+    min-height:0;
+    justify-self:center;
+    margin-left:0;
+    margin-right:0;
+    border-radius:0;
+    background:none;
+    display:block;
+    position:relative;
+    overflow:visible;
+    box-shadow:none;
+  }
+
+  .dock-svg{
+    display:block;
+    width:100%;
+    height:100%;
+    aspect-ratio:860 / 330;
+    overflow:visible;
+  }
+
+  .dock-hit{
+    position:absolute;
+    top:46.3%;
+    height:39.6%;
+    border:0;
+    background:transparent;
+    padding:0;
+    margin:0;
+    border-radius:clamp(18px, 4vw, 22px);
+    cursor:pointer;
+  }
+
+  .dock-hit-1{left:5.4%;width:14.9%}
+  .dock-hit-2{left:25.9%;width:14.9%}
+  .dock-hit-3{left:58.7%;width:14.9%}
+  .dock-hit-4{left:79.2%;width:14.9%}
+
+  .name{
+    position:absolute;
+    left:0;
+    right:0;
+    top:8px;
+    text-align:center;
+    font-size:12px;
+    line-height:1;
+    font-weight:900;
+    color:var(--name-color);
+    pointer-events:none;
+    white-space:nowrap;
+  }
+
+  .size{
+    position:absolute;
+    left:0;
+    right:0;
+    top:50%;
+    transform:translateY(-42%);
+    text-align:center;
+    font-size:15px;
+    line-height:1.05;
+    font-weight:950;
+    color:var(--size-color);
+    pointer-events:none;
+    white-space:pre-line;
+  }
+
+  .hero .name{top:clamp(14px, 2.8vw, 22px);font-size:clamp(15px, 2.7vw, 20px)}
+  .hero .size{font-size:clamp(28px, 5.2vw, 40px)}
+  .icon-box .name,
+  .tiny .name{top:7px;color:var(--icon-name-color);font-size:10px}
+  .icon-box .size,
+  .tiny .size{font-size:12px;color:var(--icon-size-color);text-shadow:var(--icon-size-shadow)}
+  .side-widget .size{font-size:clamp(16px, 3.1vw, 20px)}
+  .search .name{display:none}
+  .search .size{font-size:12px}
+  .dock > .name{display:none}
+  .dock > .size{top:7px;transform:none;font-size:12px;color:var(--dock-size-color)}
+
+
+  .section-name:empty::before,
+  .side-widget-wrap > .label:empty::before{
+    content:"\00a0";
+  }
+
+  /* 调试仪表盘:网址加 ?debug=1 显示,平时不存在感 */
+  .vp-debug{
+    position:fixed;
+    top:calc(var(--safe-top) + 10px);
+    left:12px;
+    z-index:99;
+    padding:9px 13px;
+    border-radius:12px;
+    background:rgba(0,0,0,.74);
+    color:#7CFC9A;
+    font:11px/1.55 ui-monospace,Menlo,monospace;
+    white-space:pre;
+    display:none;
+    pointer-events:none;
+  }
+  body.vp-debug-on .vp-debug{display:block}
+
+  .vp-tuner{
+    position:fixed;
+    top:calc(var(--safe-top) + 215px);
+    left:12px;
+    z-index:99;
+    display:none;
+    grid-template-columns:repeat(4, auto);
+    gap:6px;
+  }
+  body.vp-debug-on .vp-tuner{display:grid}
+  .vp-tuner button{
+    padding:9px 11px;
+    border:0;
+    border-radius:9px;
+    background:rgba(0,0,0,.74);
+    color:#FFD966;
+    font:12px/1 ui-monospace,Menlo,monospace;
+  }
+
+  .dock-icon-shape{
+    stroke:var(--dock-icon-stroke);
+    stroke-width:var(--dock-icon-stroke-width);
+  }
+
+  .dock-star-rotor{
+    transform-box:fill-box;
+    transform-origin:center;
+    opacity:var(--star-opacity);
+  }
+
+  body.star-spinning .dock-star-rotor{
+    animation:paletteStarSpin .68s cubic-bezier(.22,.8,.22,1);
+  }
+
+  @keyframes paletteStarSpin{
+    from{transform:rotate(0deg)}
+    to{transform:rotate(360deg)}
+  }
+  /* 电脑端将 390px 手机基准整体等比放大约 1.4 倍 */
+  @media (min-width:900px){
+    :root{
+      --page-width:546px;
+      --grid-width:478px;
+      --page-pad:34px;
+      --row-gap:25px;
+      --icon-max:106px;
+      --hero-h:232px;
+      --side-h:104px;
+      --dock-extend:34px;
+      --dock-max:546px;
+    }
+
+    .page-content{padding-top:calc(var(--safe-top) + 20px);padding-bottom:14px}
+    .top-area{padding-top:0;margin-bottom:11px}
+    .hero{border-radius:0}
+    .section-name{margin-top:11px;margin-bottom:11px;font-size:20px}
+    .row + .row{margin-top:var(--row-gap)}
+    .row.row-second{margin-top:var(--row-gap);padding-top:0}
+    .row.apps{margin-top:var(--row-gap)}
+    .middle-area{margin-bottom:28px}
+    .quad-icon-container,.side-widget{border-radius:28px}
+    .icon-box,.dock-hit{border-radius:25px}
+    .tiny{border-radius:21px}
+    .label{margin-top:11px;font-size:18px}
+    .fill-area{min-height:101px;padding-bottom:17px;margin-bottom:calc(238px + max(0px, calc(8px - var(--dock-shift, 0px))))}
+    .search{width:129px;height:48px}
+    .dock-fixed{padding-top:17px}
+    .hero .name{top:20px;font-size:21px}
+    .hero .size{font-size:39px}
+    .side-widget .size{font-size:22px}
+  }
+
+  @media (max-width:480px){
+    :root{
+      --row-gap:18px;
+      --dock-extend:24px;
+    }
+
+    .page-content{padding-top:calc(var(--safe-top) + 14px);padding-bottom:10px}
+    .top-area{padding-top:0;margin-bottom:8px}
+    .section-name{margin-top:8px;margin-bottom:8px}
+    .row + .row{margin-top:var(--row-gap)}
+    .row.row-second{margin-top:var(--row-gap);padding-top:0}
+    .row.apps{margin-top:var(--row-gap)}
+    .middle-area{margin-bottom:20px}
+    .fill-area{min-height:72px;padding-bottom:12px;margin-bottom:calc(clamp(170px, 24vw, 220px) + max(0px, calc(8px - var(--dock-shift, 0px))))}
+  }
+
+  @media (max-width:380px){
+    :root{--icon-max:60px}
+    .label{font-size:12px}
+    .icon-box .size,.tiny .size{font-size:11px}
+    .side-widget .size{font-size:15px}
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute">
+  <defs>
+    <clipPath id="concaveHeroClip" clipPathUnits="objectBoundingBox">
+      <path d="
+        M .035 0
+        H .965
+        C .965 .0383 .9808 .07 1 .07
+        V .93
+        C .9808 .93 .965 .9617 .965 1
+        H .035
+        C .035 .9617 .0192 .93 0 .93
+        V .07
+        C .0192 .07 .035 .0383 .035 0
+        Z
+      "/>
+    </clipPath>
+  </defs>
+</svg>
+<div class="app">
+  <div class="swipe-viewport">
+    <div class="page-track">
+      <section class="page-panel">
+      <div class="page-content">
+        <div class="top-area">
+          <div class="hero-counter-stage" aria-label="纪念日计数">
+            <div class="hero-counter">
+              <strong class="hero-counter-number" id="sinceDays">0</strong>
+              <span class="hero-counter-caption">SINCE · 2025.07.19</span>
+            </div>
+          </div>
+          <div class="component-grid">
+            <div class="hero-frame">
+              <div class="box hero m" data-name="顶部大组件">
+                <div class="hero-feature" aria-label="Here with you Ivy">
+                  <div class="hero-greeting">
+                    <span class="hero-typewriter" id="heroGreeting"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="section-name"></div>
+        </div>
+
+        <div class="middle-area">
+          <div class="component-grid row primary-composite">
+            <div class="box quad-icon-container" data-name="四图标容器"></div>
+            <div class="primary-widget-stack">
+              <div class="box side-widget primary-widget-top m" data-name="中组件"></div>
+              <div class="box side-widget alt primary-widget-bottom m" data-name="中组件"></div>
+            </div>
+          </div>
+
+          <div class="component-grid row apps">
+            <div class="entry"><div class="box tiny m" data-name="小入口"></div><div class="label">Google Photos</div></div>
+            <div class="entry"><div class="box tiny m" data-name="小入口"></div><div class="label">Spotify</div></div>
+            <div class="entry"><div class="box tiny m" data-name="小入口"></div><div class="label">Sketchbook</div></div>
+            <div class="entry"><div class="box tiny m" data-name="小入口"></div><div class="label">BaiCiZhan</div></div>
+          </div>
+        </div>
+
+        <div class="fill-area"></div>
+
+                </div>
+      </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="dock-fixed">
+          <div class="component-grid search-row">
+            <div class="box search m" data-name="搜索"></div>
+          </div>
+          <div class="component-grid">
+            <div class="box dock m" data-name="底部栏">
+              <svg class="dock-svg" viewBox="0 0 860 330" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Dock 同心凹槽组件">
+                <defs>
+                  <filter id="dockShadow" x="-8%" y="-30%" width="116%" height="160%">
+                    <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#2f281f" flood-opacity=".10"></feDropShadow>
+                  </filter>
+                </defs>
+
+                <path d="
+                    M 72 134
+                    L 286 134
+                    C 314 134 338 142 351 159
+                    C 371 183 398 196 430 196
+                    C 462 196 489 183 509 159
+                    C 522 142 546 134 574 134
+                    L 788 134
+                    A 60 60 0 0 1 848 194
+                    L 848 270
+                    A 60 60 0 0 1 788 330
+                    L 72 330
+                    A 60 60 0 0 1 12 270
+                    L 12 194
+                    A 60 60 0 0 1 72 134
+                    Z"
+                  fill="var(--dock-svg-bg)"
+                  stroke="var(--dock-svg-stroke)"
+                  stroke-width="1.4"
+                  filter="url(#dockShadow)"></path>
+
+                <rect class="dock-icon-shape" x="43.5" y="166.5" width="135" height="135" rx="38" fill="var(--icon-bg)"></rect>
+                <rect class="dock-icon-shape" x="219.5" y="166.5" width="135" height="135" rx="38" fill="var(--icon-bg)"></rect>
+                <rect class="dock-icon-shape" x="505.5" y="166.5" width="135" height="135" rx="38" fill="var(--icon-bg)"></rect>
+                <rect class="dock-icon-shape" x="681.5" y="166.5" width="135" height="135" rx="38" fill="var(--icon-bg)"></rect>
+
+                <circle class="dock-icon-shape" id="paletteToggle" cx="430" cy="92" r="82" fill="var(--icon-bg)" style="cursor:pointer"></circle>
+                <g class="dock-center-star" transform="translate(365 32) scale(0.2112)" pointer-events="none">
+                  <g class="dock-star-rotor">
+                  <rect x="35" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="65" y="125" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="65" y="275" width="26" height="26" rx="3" fill="var(--star-fill-soft)"/>
+  <rect x="95" y="95" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="95" y="125" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="95" y="155" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="95" y="275" width="26" height="26" rx="3" fill="var(--star-fill-soft)"/>
+  <rect x="95" y="395" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="95" y="425" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="125" y="125" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="125" y="155" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="125" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="125" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="125" y="395" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="125" y="425" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="155" y="35" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="155" y="155" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="155" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="155" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="155" y="365" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="155" y="395" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="155" y="485" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="5" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="35" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="65" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="95" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="215" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="365" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="455" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="185" y="485" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="5" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="35" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="65" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="95" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="125" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="215" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="365" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="425" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="215" y="455" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="95" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="125" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="155" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="215" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="365" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="395" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="245" y="425" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="275" y="155" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="275" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="275" y="215" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="275" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="275" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="275" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="275" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="275" y="365" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="275" y="485" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="275" y="515" width="26" height="26" rx="3" fill="var(--star-fill-soft)"/>
+  <rect x="275" y="545" width="26" height="26" rx="3" fill="var(--star-fill-light)"/>
+  <rect x="305" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="215" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="365" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="395" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="425" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="455" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="485" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="515" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="305" y="545" width="26" height="26" rx="3" fill="var(--star-fill-soft)"/>
+  <rect x="335" y="35" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="65" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="95" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="125" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="155" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="215" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="335" y="365" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="5" width="26" height="26" rx="3" fill="var(--star-fill-soft)"/>
+  <rect x="365" y="35" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="65" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="95" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="215" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="365" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="395" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="365" y="425" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="155" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="215" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="365" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="395" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="425" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="395" y="455" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="95" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="125" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="155" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="185" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="215" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="365" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="395" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="425" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="455" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="425" y="485" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="455" y="65" width="26" height="26" rx="3" fill="var(--star-fill-soft)"/>
+  <rect x="455" y="95" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="455" y="125" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="455" y="155" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="455" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="455" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="455" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="455" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="455" y="395" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="455" y="425" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="455" y="485" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="485" y="65" width="26" height="26" rx="3" fill="var(--star-fill-soft)"/>
+  <rect x="485" y="95" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="485" y="125" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="485" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="485" y="275" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="485" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="485" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="485" y="425" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="515" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="515" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="515" y="335" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="545" y="215" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="545" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="545" y="305" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="545" y="335" width="26" height="26" rx="3" fill="var(--star-fill-soft)"/>
+  <rect x="575" y="245" width="26" height="26" rx="3" fill="var(--star-fill-main)"/>
+  <rect x="575" y="335" width="26" height="26" rx="3" fill="var(--star-fill-light)"/>
+  <line x1="21.0" y1="288.0" x2="27.0" y2="288.0" stroke="var(--star-line)" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="20.1" y1="290.1" x2="24.4" y2="294.4" stroke="var(--star-line)" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="18.0" y1="291.0" x2="18.0" y2="297.0" stroke="var(--star-line)" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="15.9" y1="290.1" x2="11.6" y2="294.4" stroke="var(--star-line)" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="15.0" y1="288.0" x2="9.0" y2="288.0" stroke="var(--star-line)" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="15.9" y1="285.9" x2="11.6" y2="281.6" stroke="var(--star-line)" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="18.0" y1="285.0" x2="18.0" y2="279.0" stroke="var(--star-line)" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="20.1" y1="285.9" x2="24.4" y2="281.6" stroke="var(--star-line)" stroke-width="1.8" stroke-linecap="round"/>
+  <circle cx="18.0" cy="288.0" r="1.6" fill="var(--star-fill-main)"/>
+                  </g>
+                </g>
+              </svg>
+
+              <button class="dock-hit dock-hit-1" aria-label="Dock入口1" title="Dock入口1"></button>
+              <button class="dock-hit dock-hit-2" aria-label="Dock入口2" title="Dock入口2"></button>
+              <button class="dock-hit dock-hit-3" aria-label="Dock入口3" title="Dock入口3"></button>
+              <button class="dock-hit dock-hit-4" aria-label="Dock入口4" title="Dock入口4"></button>
+            </div>
+          </div>
+</div>
+
+<div class="vp-debug" id="vpDebug"></div>
+
+<script>
+  /* ---- iOS 全屏 PWA 视口短高补偿 ----
+     病灶:standalone + viewport-fit=cover 下,WebKit 报告的视口高度
+     偶发少算一个状态栏高,导致整页被"吊高"、底部露出一条画布底色。
+     方案:实测 screen.height 与 innerHeight 的差,差多少补多少;
+     差值为 0(正常环境)时本段等于不存在,不会双倍补偿。 */
+  const vpDebugEl = document.getElementById('vpDebug');
+  const isStandalone = () =>
+    navigator.standalone === true ||
+    (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+
+  const measureSafeInsets = () => {
+    const p = document.createElement('div');
+    p.style.cssText = 'position:fixed;left:-9999px;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);';
+    document.body.appendChild(p);
+    const cs = getComputedStyle(p);
+    const r = { top: parseFloat(cs.paddingTop) || 0, bottom: parseFloat(cs.paddingBottom) || 0 };
+    p.remove();
+    return r;
+  };
+
+  let appExt = 0, dockShift = 0;
+
+  const renderDebug = () => {
+    if (!vpDebugEl || !document.body.classList.contains('vp-debug-on')) return;
+    const s = measureSafeInsets();
+    const vv = window.visualViewport;
+    vpDebugEl.textContent =
+      'nav.standalone : ' + (navigator.standalone === true) +
+      '\ndm.standalone  : ' + (window.matchMedia ? matchMedia('(display-mode: standalone)').matches : '-') +
+      '\nscreen.h       : ' + screen.height +
+      '\ninner.h        : ' + window.innerHeight +
+      '\ndocEl.clientH  : ' + document.documentElement.clientHeight +
+      '\nvv.height      : ' + (vv ? Math.round(vv.height * 10) / 10 : '-') +
+      '\nvv.offsetTop   : ' + (vv ? Math.round(vv.offsetTop * 10) / 10 : '-') +
+      '\nsafe top/btm   : ' + s.top + ' / ' + s.bottom +
+      '\n\u58f3 app-ext    : ' + appExt +
+      '\n\u575e dock-shift : ' + dockShift;
+  };
+
+  const applyVars = () => {
+    document.documentElement.style.setProperty('--vp-fix', appExt + 'px');
+    document.documentElement.style.setProperty('--dock-shift', dockShift + 'px');
+    renderDebug();
+  };
+
+  const initFix = () => {
+    /* 直接量病灶本身:布局视口比真实屏幕矮多少,矮多少壳补多少 */
+    const icb = document.documentElement.clientHeight || 0;
+    let full = Math.max(window.innerHeight || 0, (window.visualViewport && visualViewport.height) || 0);
+    if (isStandalone() && screen && screen.height) full = Math.max(full, screen.height);
+    const d = full - icb;
+    const sick = d > 8 && d <= 90;
+    /* Ivy 2026-07 实机调参定标:病发时壳补 30、坞升 26;系统痊愈自动归零 */
+    appExt = sick ? 30 : 0;
+    dockShift = sick ? -26 : 0;
+    applyVars();
+  };
+
+  if (/[?&]debug=1/.test(location.search)) document.body.classList.add('vp-debug-on');
+
+  /* 调参台:debug 模式下出现,实时调两个补偿值 */
+  if (document.body.classList.contains('vp-debug-on')) {
+    const tuner = document.createElement('div');
+    tuner.className = 'vp-tuner';
+    [['\u58f3+10', () => appExt += 10], ['\u58f3-10', () => appExt -= 10],
+     ['\u58f3+2',  () => appExt += 2],  ['\u58f3-2',  () => appExt -= 2],
+     ['\u575e+10', () => dockShift += 10], ['\u575e-10', () => dockShift -= 10],
+     ['\u575e+2',  () => dockShift += 2],  ['\u575e-2',  () => dockShift -= 2]
+    ].forEach(pair => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = pair[0];
+      b.addEventListener('click', () => { pair[1](); applyVars(); });
+      tuner.appendChild(b);
+    });
+    document.body.appendChild(tuner);
+    vpDebugEl.style.pointerEvents = 'auto';
+    vpDebugEl.addEventListener('click', () => {
+      document.body.classList.remove('vp-debug-on');
+      vpDebugEl.style.display = 'none';
+      tuner.style.display = 'none';
+    });
+  }
+
+  initFix();
+  window.addEventListener('orientationchange', () => setTimeout(initFix, 400));
+  if (window.visualViewport) {
+    visualViewport.addEventListener('resize', renderDebug);
+    visualViewport.addEventListener('scroll', renderDebug);
+  }
+  setInterval(renderDebug, 1000);
+
+  const paletteToggle = document.querySelector('.dock-fixed #paletteToggle');
+
+  /*
+    色盘顺序：
+    1 原始浅色干净版
+    2 原始橘米分段版
+    3 新增 index Day 玻璃版
+    4 新增 index Dusk 玻璃版
+    5 新增 index Night 玻璃版
+    6 新增白底柔粉版
+    7 新增花间晨雾版（本地外链背景图）
+  */
+  const palettes = [
+    {
+      name:'clean',
+      classes:[],
+      bodyBg:'#f9f9f7',
+      htmlBg:'#f9f9f7',
+      themeColor:'#f9f9f7',
+      colorScheme:'light'
+    },
+    {
+      name:'striped',
+      classes:[],
+      bodyBg:'var(--wallpaper-striped)',
+      htmlBg:'#d9785a',
+      themeColor:'#d9785a',
+      colorScheme:'light'
+    },
+    {
+      name:'celestial-day',
+      classes:['theme-celestial-day'],
+      bodyBg:'#F7F5F0',
+      htmlBg:'#F7F5F0',
+      themeColor:'#F7F5F0',
+      colorScheme:'light'
+    },
+    {
+      name:'celestial-dusk',
+      classes:['theme-celestial-dusk'],
+      bodyBg:'#B25A42',
+      htmlBg:'#B25A42',
+      themeColor:'#B25A42',
+      colorScheme:'dark'
+    },
+    {
+      name:'celestial-night',
+      classes:['theme-celestial-night'],
+      bodyBg:'#16181D',
+      htmlBg:'#16181D',
+      themeColor:'#16181D',
+      colorScheme:'dark'
+    },
+    {
+      name:'soft-pink',
+      classes:['theme-soft-pink'],
+      bodyBg:'#FFFFFF',
+      htmlBg:'#FFFFFF',
+      themeColor:'#FFFFFF',
+      colorScheme:'light'
+    },
+    {
+      name:'flower',
+      classes:['theme-flower'],
+      bodyBg:'url("./IMG_flower.JPG") center / cover no-repeat fixed',
+      htmlBg:'#F8F1EF',
+      themeColor:'#F8F1EF',
+      colorScheme:'light'
+    }
+  ];
+
+  let paletteIndex = window.__initialPaletteIndex ?? 0;
+  let starSpinTimer = null;
+  let greetingTimer = null;
+  const managedClasses = ['theme-celestial-day','theme-celestial-dusk','theme-celestial-night','theme-soft-pink','theme-flower'];
+  const heroGreeting = document.getElementById('heroGreeting');
+  const sinceDays = document.getElementById('sinceDays');
+
+  const updateSinceDays = () => {
+    if (!sinceDays) return;
+    const now = new Date();
+    const todayUtc = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const startUtc = Date.UTC(2025, 6, 19);
+    sinceDays.textContent = String(Math.max(0, Math.floor((todayUtc - startUtc) / 86400000)));
+  };
+
+  const typeHeroGreeting = () => {
+    if (!heroGreeting) return;
+    clearTimeout(greetingTimer);
+    const copy = 'Here With You\nIvy';
+    let index = 0;
+    heroGreeting.textContent = '';
+
+    const typeNextCharacter = () => {
+      heroGreeting.textContent = copy.slice(0, index);
+      if (index >= copy.length) return;
+      const nextCharacter = copy[index];
+      index += 1;
+      greetingTimer = setTimeout(typeNextCharacter, nextCharacter === '\n' ? 260 : 92);
+    };
+
+    typeNextCharacter();
+  };
+
+  updateSinceDays();
+  setInterval(updateSinceDays, 60000);
+
+  const spinPaletteStar = () => {
+    document.body.classList.remove('star-spinning');
+    void document.body.offsetWidth;
+    document.body.classList.add('star-spinning');
+    clearTimeout(starSpinTimer);
+    starSpinTimer = setTimeout(() => {
+      document.body.classList.remove('star-spinning');
+    }, 720);
+  };
+
+  const setRootBackground = () => {
+    const palette = palettes[paletteIndex];
+
+    document.body.classList.remove(...managedClasses);
+    if (palette.classes.length) document.body.classList.add(...palette.classes);
+
+    document.body.style.background = palette.bodyBg;
+    document.documentElement.style.background = palette.htmlBg;
+    document.body.style.setProperty('--status-bar-bg', palette.themeColor);
+    document.documentElement.style.setProperty('--status-bar-bg', palette.themeColor);
+    document.documentElement.style.colorScheme = palette.colorScheme;
+    document.body.dataset.palette = palette.name;
+    const themeMeta = document.querySelector('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.setAttribute('content', palette.themeColor);
+
+    clearTimeout(greetingTimer);
+    if (palette.name === 'soft-pink') {
+      typeHeroGreeting();
+    } else if (heroGreeting) {
+      heroGreeting.textContent = '';
+    }
+  };
+
+  setRootBackground();
+  paletteToggle?.addEventListener('click', () => {
+    paletteIndex = (paletteIndex + 1) % palettes.length;
+    window.location.hash = `palette-${paletteIndex}`;
+    setRootBackground();
+    spinPaletteStar();
+  });
+</script>
+</body>
+</html>
