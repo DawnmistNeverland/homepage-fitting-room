@@ -3,7 +3,7 @@ name: Apply soft pink widget shapes
 on:
   push:
     paths:
-      - '.github/widget-style-trigger'
+      - '.github/widget-style-trigger-v3'
 
 permissions:
   contents: write
@@ -80,50 +80,24 @@ jobs:
           }
 
           body.theme-soft-pink .soft-capsule-inner,
-          body.theme-soft-pink .soft-rect-inner{
-            position:absolute;
-            inset:0;
-          }
+          body.theme-soft-pink .soft-rect-inner{position:absolute;inset:0}
 
           body.theme-soft-pink .soft-capsule-g{
-            position:absolute;
-            left:clamp(22px,4vw,30px);
-            top:50%;
-            transform:translateY(-51%);
-            color:#B7C59B;
-            font-size:clamp(40px,7vw,56px);
-            font-weight:700;
-            line-height:1;
-            letter-spacing:-.05em;
+            position:absolute;left:clamp(22px,4vw,30px);top:50%;transform:translateY(-51%);
+            color:#B7C59B;font-size:clamp(40px,7vw,56px);font-weight:700;line-height:1;letter-spacing:-.05em
           }
 
           body.theme-soft-pink .soft-percent{
-            position:absolute;
-            left:clamp(18px,3vw,24px);
-            bottom:clamp(13px,2.5vw,18px);
-            color:#fff;
-            font-size:clamp(38px,7vw,56px);
-            font-weight:300;
-            line-height:.9;
-            letter-spacing:-.05em;
+            position:absolute;left:clamp(18px,3vw,24px);bottom:clamp(13px,2.5vw,18px);
+            color:#fff;font-size:clamp(38px,7vw,56px);font-weight:300;line-height:.9;letter-spacing:-.05em
           }
 
           body.theme-soft-pink .soft-bars{
-            position:absolute;
-            right:clamp(14px,2.8vw,22px);
-            bottom:clamp(14px,2.4vw,18px);
-            display:flex;
-            align-items:flex-end;
-            gap:clamp(5px,1vw,8px);
+            position:absolute;right:clamp(14px,2.8vw,22px);bottom:clamp(14px,2.4vw,18px);
+            display:flex;align-items:flex-end;gap:clamp(5px,1vw,8px)
           }
 
-          body.theme-soft-pink .soft-bars i{
-            display:block;
-            width:clamp(8px,1.7vw,12px);
-            background:#fff;
-            border-radius:1px;
-          }
-
+          body.theme-soft-pink .soft-bars i{display:block;width:clamp(8px,1.7vw,12px);background:#fff;border-radius:1px}
           body.theme-soft-pink .soft-bars i:nth-child(1){height:16px}
           body.theme-soft-pink .soft-bars i:nth-child(2){height:26px}
           body.theme-soft-pink .soft-bars i:nth-child(3){height:23px}
@@ -131,13 +105,9 @@ jobs:
           body.theme-soft-pink .soft-bars i:nth-child(5){height:38px}
 
           body.theme-soft-pink .soft-bubble{
-            position:absolute;
-            display:block;
-            border:1px solid rgba(177,169,176,.38);
-            border-radius:50%;
-            background:rgba(255,255,255,.10);
+            position:absolute;display:block;border:1px solid rgba(177,169,176,.38);
+            border-radius:50%;background:rgba(255,255,255,.10)
           }
-
           body.theme-soft-pink .soft-bubble-a{width:12px;height:12px;left:48%;top:25%}
           body.theme-soft-pink .soft-bubble-b{width:9px;height:9px;left:18px;bottom:12px}
           body.theme-soft-pink .soft-bubble-c{width:9px;height:9px;right:20px;top:12px}
