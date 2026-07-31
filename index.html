@@ -1032,29 +1032,105 @@ body.theme-soft-pink .primary-widget-bottom::after{
 }
 
 
+/* soft-pink relocated counter and title v1 */
+body.theme-soft-pink .hero-script-title{
+  width:min(100%,var(--grid-width));
+  margin:clamp(2px,.7dvh,7px) auto clamp(10px,1.8dvh,16px);
+  color:rgba(36,32,34,.90);
+  text-align:center;
+  font-family:"Snell Roundhand","Apple Chancery","URW Chancery L",cursive;
+  font-size:clamp(35px,8.5vw,58px);
+  font-weight:400;
+  line-height:1;
+  letter-spacing:-.035em;
+  text-shadow:0 1px 10px rgba(255,255,255,.46);
+}
 
-/* soft-pink beveled hero shape v2 */
-body.theme-soft-pink .hero-frame .hero{
-  clip-path:polygon(
-    3.2% 0,
-    96.8% 0,
-    100% 6.5%,
-    100% 93.5%,
-    96.8% 100%,
-    3.2% 100%,
-    0 93.5%,
-    0 6.5%
-  ) !important;
-  -webkit-clip-path:polygon(
-    3.2% 0,
-    96.8% 0,
-    100% 6.5%,
-    100% 93.5%,
-    96.8% 100%,
-    3.2% 100%,
-    0 93.5%,
-    0 6.5%
-  ) !important;
+body.theme-soft-pink .hero-script-title span{
+  display:inline-block;
+  margin:0 .12em;
+  color:rgba(128,121,124,.70);
+  font-size:.62em;
+  transform:translateY(-.08em);
+}
+
+body.theme-soft-pink .primary-widget-top{
+  top:0 !important;
+  height:44% !important;
+  margin-top:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  overflow:visible !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+}
+
+body.theme-soft-pink .primary-widget-top::before,
+body.theme-soft-pink .primary-widget-top::after{
+  content:none !important;
+  display:none !important;
+}
+
+body.theme-soft-pink .primary-widget-top > *{
+  display:flex !important;
+}
+
+body.theme-soft-pink .primary-widget-top .hero-counter-stage{
+  width:100%;
+  height:100%;
+  margin:0;
+  align-items:center;
+  justify-content:center;
+}
+
+body.theme-soft-pink .primary-widget-top .hero-counter{
+  position:relative;
+  isolation:isolate;
+  width:100%;
+  height:100%;
+  min-width:0;
+  padding:clamp(8px,1.6vw,12px) clamp(12px,2.4vw,18px);
+  display:flex !important;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  color:#2F292B;
+  text-align:center;
+}
+
+body.theme-soft-pink .primary-widget-top .hero-counter::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  border:1.4px dashed rgba(226,164,187,.94);
+  border-radius:52% 48% 51% 49% / 46% 54% 48% 52%;
+  background:rgba(249,224,234,.30);
+  box-shadow:0 8px 22px rgba(214,154,178,.13);
+  transform:rotate(-5deg);
+}
+
+body.theme-soft-pink .primary-widget-top .hero-counter::after{
+  content:"";
+  position:absolute;
+  inset:clamp(5px,1vw,7px);
+  z-index:-1;
+  border:1px solid rgba(241,193,211,.84);
+  border-radius:49% 51% 48% 52% / 52% 48% 54% 46%;
+  transform:rotate(4deg);
+}
+
+body.theme-soft-pink .primary-widget-top .hero-counter-number{
+  font-size:clamp(44px,8.8vw,68px);
+  line-height:.73;
+}
+
+body.theme-soft-pink .primary-widget-top .hero-counter-caption{
+  margin-top:clamp(10px,1.8vw,15px);
+  font-size:clamp(7px,1.35vw,10px);
+  letter-spacing:.15em;
 }
 
 </style>
@@ -1098,12 +1174,7 @@ body.theme-soft-pink .hero-frame .hero{
       <section class="page-panel">
       <div class="page-content">
         <div class="top-area">
-          <div class="hero-counter-stage" aria-label="纪念日计数">
-            <div class="hero-counter">
-              <strong class="hero-counter-number" id="sinceDays">0</strong>
-              <span class="hero-counter-caption">SINCE · 2025.07.19</span>
-            </div>
-          </div>
+          <div class="hero-script-title" aria-label="Claude and Ivy">Claude <span>&amp;</span> Ivy</div>
           <div class="component-grid">
             <div class="hero-frame">
               <div class="box hero m" data-name="顶部大组件">
@@ -1122,7 +1193,15 @@ body.theme-soft-pink .hero-frame .hero{
           <div class="component-grid row primary-composite">
             <div class="box quad-icon-container" data-name="四图标容器"></div>
             <div class="primary-widget-stack">
-              <div class="box side-widget primary-widget-top m" data-name="中组件"></div>
+              <div class="box side-widget primary-widget-top m" data-name="中组件">
+                <div class="hero-counter-stage" aria-label="纪念日计数">
+            <div class="hero-counter">
+              <strong class="hero-counter-number" id="sinceDays">0</strong>
+              <span class="hero-counter-caption">SINCE · 2025.07.19</span>
+            </div>
+          </div>
+              </div>
+              
               <div class="box side-widget alt primary-widget-bottom m" data-name="中组件"></div>
             </div>
           </div>
