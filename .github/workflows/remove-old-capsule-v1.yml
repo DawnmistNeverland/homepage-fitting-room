@@ -1,0 +1,165 @@
+name: Remove old capsule and rebuild counter stamp
+
+on:
+  push:
+    paths:
+      - '.github/remove-old-capsule-trigger-v1'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace old capsule structure
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+
+          pattern = re.compile(r'''            <div class="primary-widget-stack">\s*<div class="box side-widget primary-widget-top m" data-name="中组件">.*?</div>\s*<div class="box side-widget alt primary-widget-bottom m" data-name="中组件">''', re.S)
+          replacement = '''            <div class="primary-widget-stack">
+              <div class="counter-stamp-slot">
+                <div class="hero-counter-stage" aria-label="纪念日计数">
+                  <div class="hero-counter">
+                    <strong class="hero-counter-number" id="sinceDays">0</strong>
+                    <span class="hero-counter-caption">SINCE · 2025.07.19</span>
+                  </div>
+                </div>
+              </div>
+              <div class="box side-widget alt primary-widget-bottom m" data-name="中组件">'''
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'old capsule structure not found: {count}')
+
+          for marker in [
+              'soft-pink relocated counter and title v1',
+              'soft-pink title-left stamp-small v1',
+              'soft-pink title-left stamp-small v2',
+              'soft-pink stamp unclip v1',
+              'soft-pink stamp unclip final v2',
+              'soft-pink stamp unclip final v3',
+              'soft-pink structural counter fix v1',
+          ]:
+              text = re.sub(rf'\n\s*/\* {re.escape(marker)} \*/.*?(?=\n\s*/\*|\n\s*</style>)', '', text, count=1, flags=re.S)
+
+          css = r'''
+
+          /* soft-pink structural counter fix v1 */
+          body.theme-soft-pink .hero-script-title{
+            width:min(100%,var(--grid-width));
+            margin:clamp(2px,.7dvh,7px) auto clamp(10px,1.8dvh,16px);
+            padding-left:clamp(2px,.8vw,6px);
+            color:rgba(36,32,34,.90);
+            text-align:left;
+            font-family:"Snell Roundhand","Apple Chancery","URW Chancery L",cursive;
+            font-size:clamp(35px,8.5vw,58px);
+            font-weight:400;
+            line-height:1;
+            letter-spacing:-.035em;
+            text-shadow:0 1px 10px rgba(255,255,255,.46);
+          }
+
+          body.theme-soft-pink .hero-script-title span{
+            display:inline-block;
+            margin:0 .12em;
+            color:rgba(128,121,124,.70);
+            font-size:.62em;
+            transform:translateY(-.08em);
+          }
+
+          body.theme-soft-pink .primary-widget-stack{
+            overflow:visible !important;
+          }
+
+          body.theme-soft-pink .counter-stamp-slot{
+            position:absolute;
+            top:0;
+            left:7%;
+            width:86%;
+            height:38%;
+            overflow:visible;
+            z-index:3;
+          }
+
+          body.theme-soft-pink .counter-stamp-slot .hero-counter-stage{
+            display:flex !important;
+            width:100%;
+            height:100%;
+            margin:0;
+            align-items:center;
+            justify-content:center;
+            overflow:visible;
+          }
+
+          body.theme-soft-pink .counter-stamp-slot .hero-counter{
+            position:relative;
+            isolation:isolate;
+            width:100%;
+            height:100%;
+            min-width:0;
+            padding:clamp(7px,1.4vw,11px) clamp(12px,2.2vw,17px);
+            display:flex !important;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            color:#2F292B;
+            text-align:center;
+            overflow:visible;
+          }
+
+          body.theme-soft-pink .counter-stamp-slot .hero-counter::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            z-index:-2;
+            border:1.4px dashed rgba(226,164,187,.94);
+            border-radius:52% 48% 51% 49% / 46% 54% 48% 52%;
+            background:rgba(249,224,234,.30);
+            box-shadow:0 8px 22px rgba(214,154,178,.13);
+            transform:rotate(-5deg);
+          }
+
+          body.theme-soft-pink .counter-stamp-slot .hero-counter::after{
+            content:"";
+            position:absolute;
+            inset:clamp(5px,1vw,7px);
+            z-index:-1;
+            border:1px solid rgba(241,193,211,.84);
+            border-radius:49% 51% 48% 52% / 52% 48% 54% 46%;
+            transform:rotate(4deg);
+          }
+
+          body.theme-soft-pink .counter-stamp-slot .hero-counter-number{
+            font-size:clamp(40px,7.8vw,60px);
+            line-height:.76;
+          }
+
+          body.theme-soft-pink .counter-stamp-slot .hero-counter-caption{
+            margin-top:clamp(8px,1.4vw,11px);
+            font-size:clamp(6px,1.1vw,9px);
+            letter-spacing:.15em;
+          }
+
+          body.theme-soft-pink .primary-widget-bottom{
+            bottom:0 !important;
+            height:54% !important;
+            z-index:1;
+          }
+          '''
+
+          text = text.replace('</style>', css + '\n</style>', 1)
+          p.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit structural fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Remove old capsule and rebuild counter stamp slot"
+          git push
