@@ -938,99 +938,6 @@
 
 
 
-/* soft-pink stamp and glass widgets v4 */
-body.theme-soft-pink .hero-counter-stage .hero-counter{
-  position:relative;
-  isolation:isolate;
-  padding:clamp(16px,3.2vw,22px) clamp(22px,4.8vw,32px) clamp(14px,2.8vw,20px);
-}
-
-body.theme-soft-pink .hero-counter-stage .hero-counter::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  z-index:-2;
-  border:1.4px dashed rgba(226,164,187,.92);
-  border-radius:52% 48% 51% 49% / 46% 54% 48% 52%;
-  background:rgba(249,224,234,.30);
-  box-shadow:0 8px 22px rgba(214,154,178,.13);
-  transform:rotate(-5deg);
-}
-
-body.theme-soft-pink .hero-counter-stage .hero-counter::after{
-  content:"";
-  position:absolute;
-  inset:clamp(6px,1.2vw,8px);
-  z-index:-1;
-  border:1px solid rgba(241,193,211,.82);
-  border-radius:49% 51% 48% 52% / 52% 48% 54% 46%;
-  transform:rotate(4deg);
-}
-
-body.theme-soft-pink .primary-widget-stack .side-widget{
-  margin-top:0 !important;
-  border-width:1px !important;
-  overflow:hidden !important;
-}
-
-body.theme-soft-pink .primary-widget-top{
-  top:0 !important;
-  height:32% !important;
-  border-radius:999px !important;
-  border-color:rgba(255,255,255,.42) !important;
-  background:
-    linear-gradient(90deg,rgba(255,255,255,.14),rgba(255,255,255,.02) 46%,rgba(255,255,255,.12)),
-    rgba(237,183,204,.58) !important;
-  box-shadow:0 9px 22px rgba(181,126,149,.12),inset 0 1px 0 rgba(255,255,255,.34) !important;
-  backdrop-filter:blur(9px) !important;
-  -webkit-backdrop-filter:blur(9px) !important;
-}
-
-body.theme-soft-pink .primary-widget-top::before,
-body.theme-soft-pink .primary-widget-top::after{
-  content:none !important;
-  display:none !important;
-}
-
-body.theme-soft-pink .primary-widget-top > *{
-  display:none !important;
-}
-
-body.theme-soft-pink .primary-widget-bottom{
-  bottom:0 !important;
-  height:56% !important;
-  border-radius:clamp(20px,4.5vw,28px) !important;
-  border-color:rgba(255,255,255,.40) !important;
-  background:
-    linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,.08) 60%,rgba(255,255,255,.03)),
-    rgba(255,255,255,.13) !important;
-  box-shadow:0 10px 25px rgba(98,99,105,.08),inset 0 1px 0 rgba(255,255,255,.34) !important;
-  backdrop-filter:blur(15px) saturate(1.08) !important;
-  -webkit-backdrop-filter:blur(15px) saturate(1.08) !important;
-}
-
-body.theme-soft-pink .primary-widget-bottom > *{
-  display:none !important;
-}
-
-body.theme-soft-pink .primary-widget-bottom::before{
-  content:'WeChat' !important;
-  display:block !important;
-  position:absolute;
-  top:clamp(13px,2.4vw,18px);
-  left:clamp(16px,3vw,21px);
-  color:rgba(65,61,64,.70);
-  font-size:clamp(14px,2.8vw,18px);
-  font-weight:600;
-  line-height:1;
-  letter-spacing:.03em;
-}
-
-body.theme-soft-pink .primary-widget-bottom::after{
-  content:none !important;
-  display:none !important;
-}
-
 
 
 /* soft-pink structural counter fix v1 */
@@ -1065,7 +972,7 @@ body.theme-soft-pink .counter-stamp-slot{
   top:0;
   left:7%;
   width:86%;
-  height:38%;
+  height:32%;
   overflow:visible;
   z-index:3;
 }
@@ -1133,6 +1040,37 @@ body.theme-soft-pink .primary-widget-bottom{
   bottom:0 !important;
   height:54% !important;
   z-index:1;
+  border-radius:clamp(20px,4.5vw,28px) !important;
+  border:1px solid rgba(255,255,255,.40) !important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,.08) 60%,rgba(255,255,255,.03)),
+    rgba(255,255,255,.13) !important;
+  box-shadow:0 10px 25px rgba(98,99,105,.08),inset 0 1px 0 rgba(255,255,255,.34) !important;
+  backdrop-filter:blur(15px) saturate(1.08) !important;
+  -webkit-backdrop-filter:blur(15px) saturate(1.08) !important;
+  overflow:hidden !important;
+}
+
+body.theme-soft-pink .primary-widget-bottom > *{
+  display:none !important;
+}
+
+body.theme-soft-pink .primary-widget-bottom::before{
+  content:'WeChat' !important;
+  display:block !important;
+  position:absolute;
+  top:clamp(13px,2.4vw,18px);
+  left:clamp(16px,3vw,21px);
+  color:rgba(65,61,64,.70);
+  font-size:clamp(14px,2.8vw,18px);
+  font-weight:600;
+  line-height:1;
+  letter-spacing:.03em;
+}
+
+body.theme-soft-pink .primary-widget-bottom::after{
+  content:none !important;
+  display:none !important;
 }
 
 </style>
