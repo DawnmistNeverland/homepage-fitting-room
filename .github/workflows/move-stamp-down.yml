@@ -1,0 +1,59 @@
+name: Apply top group correction
+
+on:
+  push:
+    paths:
+      - '.github/move-stamp-down.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Correct stamp and move top group
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+
+          text, count = re.subn(
+              r'(body\.theme-soft-pink \.counter-stamp-slot\{\s*position:absolute;\s*)top:3%;',
+              r'\1top:0%;',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit(f'expected one stamp top 3 rule, got {count}')
+
+          text = re.sub(
+              r'\n\s*/\* soft-pink top title and hero shift v\d+ \*/.*?(?=\n\s*</style>)',
+              '',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          css = '''
+
+/* soft-pink top title and hero shift v1 */
+body.theme-soft-pink .hero-script-title,
+body.theme-soft-pink .top-area > .component-grid{
+  transform:translateY(8px);
+}
+'''
+          text = text.replace('</style>', css + '\n</style>', 1)
+          p.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Move soft-pink title and hero down 8px"
+          git push
