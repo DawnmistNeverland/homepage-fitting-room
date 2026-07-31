@@ -3,7 +3,7 @@ name: Apply beveled hero shape
 on:
   push:
     paths:
-      - '.github/bevel-hero-trigger-v1'
+      - '.github/bevel-hero-trigger-v2'
 
 permissions:
   contents: write
@@ -17,58 +17,47 @@ jobs:
         run: |
           python3 - <<'PY'
           from pathlib import Path
+          import re
 
           p = Path('index.html')
           text = p.read_text(encoding='utf-8')
 
-          old_clip = '''    <clipPath id="concaveHeroClip" clipPathUnits="objectBoundingBox">
-                <path d="
-                  M .035 0
-                  H .965
-                  C .965 .0383 .9808 .07 1 .07
-                  V .93
-                  C .9808 .93 .965 .9617 .965 1
-                  H .035
-                  C .035 .9617 .0192 .93 0 .93
-                  V .07
-                  C .0192 .07 .035 .0383 .035 0
-                  Z
-                "/>
-              </clipPath>'''
+          text = re.sub(
+              r'\n\s*/\* soft-pink beveled hero shape v\d+ \*/.*?(?=\n\s*</style>)',
+              '',
+              text,
+              count=1,
+              flags=re.S,
+          )
 
-          bevel_clip = '''    <clipPath id="bevelHeroClip" clipPathUnits="objectBoundingBox">
-                <path d="
-                  M .032 0
-                  H .968
-                  L 1 .065
-                  V .935
-                  L .968 1
-                  H .032
-                  L 0 .935
-                  V .065
-                  L .032 0
-                  Z
-                "/>
-              </clipPath>'''
+          css = r'''
 
-          if 'id="bevelHeroClip"' not in text:
-              if old_clip not in text:
-                  raise SystemExit('concaveHeroClip block not found')
-              text = text.replace(old_clip, old_clip + '\n' + bevel_clip, 1)
-
-          marker = '/* soft-pink beveled hero shape v1 */'
-          css = '''
-
-          /* soft-pink beveled hero shape v1 */
+          /* soft-pink beveled hero shape v2 */
           body.theme-soft-pink .hero-frame .hero{
-            clip-path:url("#bevelHeroClip") !important;
-            -webkit-clip-path:url("#bevelHeroClip") !important;
+            clip-path:polygon(
+              3.2% 0,
+              96.8% 0,
+              100% 6.5%,
+              100% 93.5%,
+              96.8% 100%,
+              3.2% 100%,
+              0 93.5%,
+              0 6.5%
+            ) !important;
+            -webkit-clip-path:polygon(
+              3.2% 0,
+              96.8% 0,
+              100% 6.5%,
+              100% 93.5%,
+              96.8% 100%,
+              3.2% 100%,
+              0 93.5%,
+              0 6.5%
+            ) !important;
           }
           '''
 
-          if marker not in text:
-              text = text.replace('</style>', css + '\n</style>', 1)
-
+          text = text.replace('</style>', css + '\n</style>', 1)
           p.write_text(text, encoding='utf-8')
           PY
       - name: Commit change
