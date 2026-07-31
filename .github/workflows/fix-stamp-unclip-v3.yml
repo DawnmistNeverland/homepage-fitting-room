@@ -1,0 +1,81 @@
+name: Fix counter stamp clipping v3
+
+on:
+  push:
+    paths:
+      - '.github/stamp-fix-trigger-v3'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch stamp layout
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          text=p.read_text(encoding='utf-8')
+          marker='/* soft-pink stamp unclip final v3 */'
+          css=r'''
+
+          /* soft-pink stamp unclip final v3 */
+          body.theme-soft-pink .primary-composite,
+          body.theme-soft-pink .primary-widget-stack,
+          body.theme-soft-pink .primary-widget-top,
+          body.theme-soft-pink .primary-widget-top .hero-counter-stage,
+          body.theme-soft-pink .primary-widget-top .hero-counter{
+            overflow:visible !important;
+          }
+
+          body.theme-soft-pink .primary-widget-top{
+            position:absolute !important;
+            top:clamp(12px,2.6vw,18px) !important;
+            left:11% !important;
+            width:78% !important;
+            height:27% !important;
+            z-index:3 !important;
+            transform:none !important;
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter-stage{
+            position:absolute !important;
+            inset:0 !important;
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter{
+            width:100% !important;
+            height:100% !important;
+            padding:clamp(4px,.8vw,7px) clamp(8px,1.6vw,12px) !important;
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter-number{
+            font-size:clamp(34px,6.8vw,52px) !important;
+            line-height:.78 !important;
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter-caption{
+            margin-top:clamp(6px,1.1vw,9px) !important;
+            font-size:clamp(6px,1vw,8px) !important;
+          }
+
+          body.theme-soft-pink .primary-widget-bottom{
+            bottom:0 !important;
+            height:54% !important;
+            z-index:1 !important;
+          }
+          '''
+          if marker not in text:
+              text=text.replace('</style>',css+'\n</style>',1)
+              p.write_text(text,encoding='utf-8')
+          PY
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Fully fix counter stamp clipping"
+          git push
