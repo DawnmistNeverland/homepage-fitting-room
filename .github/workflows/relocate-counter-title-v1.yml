@@ -1,0 +1,185 @@
+name: Relocate counter and add script title
+
+on:
+  push:
+    paths:
+      - '.github/relocate-counter-title-trigger-v1'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Update soft-pink layout
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+
+          # Restore the original inward-curved hero shape by removing the later bevel override.
+          text = re.sub(
+              r'\n\s*/\* soft-pink beveled hero shape v\d+ \*/\s*body\.theme-soft-pink \.hero-frame \.hero\s*\{.*?\}\s*',
+              '\n', text, count=1, flags=re.S
+          )
+          text = re.sub(
+              r'\n\s*body\.theme-soft-pink \.hero-frame \.hero\s*\{[^{}]*#bevelHeroClip[^{}]*\}\s*',
+              '\n', text, count=1, flags=re.S
+          )
+
+          # Remove an earlier copy of this override if the workflow is re-run.
+          text = re.sub(
+              r'\n\s*/\* soft-pink relocated counter and title v1 \*/.*?(?=\n\s*</style>)',
+              '', text, count=1, flags=re.S
+          )
+
+          counter_pattern = re.compile(
+              r'\s*<div class="hero-counter-stage"[^>]*>\s*'
+              r'<div class="hero-counter">\s*'
+              r'<strong class="hero-counter-number" id="sinceDays">.*?</strong>\s*'
+              r'<span class="hero-counter-caption">.*?</span>\s*'
+              r'</div>\s*</div>',
+              re.S
+          )
+          match = counter_pattern.search(text)
+          if not match:
+              raise SystemExit('Top counter block not found')
+
+          counter_block = match.group(0).strip()
+          title_block = '''          <div class="hero-script-title" aria-label="Claude and Ivy">Claude <span>&amp;</span> Ivy</div>'''
+          text = text[:match.start()] + '\n' + title_block + text[match.end():]
+
+          top_widget_patterns = [
+              r'<div class="box side-widget primary-widget-top m" data-name="中组件"></div>',
+              r'<div class="box side-widget primary-widget-top m" data-name="中组件">.*?</div>\s*(?=<div class="box side-widget alt primary-widget-bottom)',
+          ]
+          replacement = '''<div class="box side-widget primary-widget-top m" data-name="中组件">\n                ''' + counter_block + '''\n              </div>\n              '''
+          replaced = False
+          for pattern in top_widget_patterns:
+              new_text, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+              if count:
+                  text = new_text
+                  replaced = True
+                  break
+          if not replaced:
+              raise SystemExit('Upper horizontal widget not found')
+
+          css = r'''
+
+          /* soft-pink relocated counter and title v1 */
+          body.theme-soft-pink .hero-script-title{
+            width:min(100%,var(--grid-width));
+            margin:clamp(2px,.7dvh,7px) auto clamp(10px,1.8dvh,16px);
+            color:rgba(36,32,34,.90);
+            text-align:center;
+            font-family:"Snell Roundhand","Apple Chancery","URW Chancery L",cursive;
+            font-size:clamp(35px,8.5vw,58px);
+            font-weight:400;
+            line-height:1;
+            letter-spacing:-.035em;
+            text-shadow:0 1px 10px rgba(255,255,255,.46);
+          }
+
+          body.theme-soft-pink .hero-script-title span{
+            display:inline-block;
+            margin:0 .12em;
+            color:rgba(128,121,124,.70);
+            font-size:.62em;
+            transform:translateY(-.08em);
+          }
+
+          body.theme-soft-pink .primary-widget-top{
+            top:0 !important;
+            height:44% !important;
+            margin-top:0 !important;
+            border:0 !important;
+            border-radius:0 !important;
+            background:transparent !important;
+            box-shadow:none !important;
+            overflow:visible !important;
+            backdrop-filter:none !important;
+            -webkit-backdrop-filter:none !important;
+          }
+
+          body.theme-soft-pink .primary-widget-top::before,
+          body.theme-soft-pink .primary-widget-top::after{
+            content:none !important;
+            display:none !important;
+          }
+
+          body.theme-soft-pink .primary-widget-top > *{
+            display:flex !important;
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter-stage{
+            width:100%;
+            height:100%;
+            margin:0;
+            align-items:center;
+            justify-content:center;
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter{
+            position:relative;
+            isolation:isolate;
+            width:100%;
+            height:100%;
+            min-width:0;
+            padding:clamp(8px,1.6vw,12px) clamp(12px,2.4vw,18px);
+            display:flex !important;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            color:#2F292B;
+            text-align:center;
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter::before{
+            content:"";
+            position:absolute;
+            inset:0;
+            z-index:-2;
+            border:1.4px dashed rgba(226,164,187,.94);
+            border-radius:52% 48% 51% 49% / 46% 54% 48% 52%;
+            background:rgba(249,224,234,.30);
+            box-shadow:0 8px 22px rgba(214,154,178,.13);
+            transform:rotate(-5deg);
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter::after{
+            content:"";
+            position:absolute;
+            inset:clamp(5px,1vw,7px);
+            z-index:-1;
+            border:1px solid rgba(241,193,211,.84);
+            border-radius:49% 51% 48% 52% / 52% 48% 54% 46%;
+            transform:rotate(4deg);
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter-number{
+            font-size:clamp(44px,8.8vw,68px);
+            line-height:.73;
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter-caption{
+            margin-top:clamp(10px,1.8vw,15px);
+            font-size:clamp(7px,1.35vw,10px);
+            letter-spacing:.15em;
+          }
+          '''
+
+          text = text.replace('</style>', css + '\n</style>', 1)
+          p.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Restore concave hero and relocate counter stamp"
+          git push
