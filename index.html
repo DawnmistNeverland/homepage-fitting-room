@@ -1033,10 +1033,28 @@ body.theme-soft-pink .primary-widget-bottom::after{
 
 
 
-/* soft-pink beveled hero shape v1 */
+/* soft-pink beveled hero shape v2 */
 body.theme-soft-pink .hero-frame .hero{
-  clip-path:url("#bevelHeroClip") !important;
-  -webkit-clip-path:url("#bevelHeroClip") !important;
+  clip-path:polygon(
+    3.2% 0,
+    96.8% 0,
+    100% 6.5%,
+    100% 93.5%,
+    96.8% 100%,
+    3.2% 100%,
+    0 93.5%,
+    0 6.5%
+  ) !important;
+  -webkit-clip-path:polygon(
+    3.2% 0,
+    96.8% 0,
+    100% 6.5%,
+    100% 93.5%,
+    96.8% 100%,
+    3.2% 100%,
+    0 93.5%,
+    0 6.5%
+  ) !important;
 }
 
 </style>
