@@ -1031,6 +1031,14 @@ body.theme-soft-pink .primary-widget-bottom::after{
   display:none !important;
 }
 
+
+
+/* soft-pink beveled hero shape v1 */
+body.theme-soft-pink .hero-frame .hero{
+  clip-path:url("#bevelHeroClip") !important;
+  -webkit-clip-path:url("#bevelHeroClip") !important;
+}
+
 </style>
 </head>
 <body>
@@ -1047,6 +1055,20 @@ body.theme-soft-pink .primary-widget-bottom::after{
         C .035 .9617 .0192 .93 0 .93
         V .07
         C .0192 .07 .035 .0383 .035 0
+        Z
+      "/>
+    </clipPath>
+    <clipPath id="bevelHeroClip" clipPathUnits="objectBoundingBox">
+      <path d="
+        M .032 0
+        H .968
+        L 1 .065
+        V .935
+        L .968 1
+        H .032
+        L 0 .935
+        V .065
+        L .032 0
         Z
       "/>
     </clipPath>
