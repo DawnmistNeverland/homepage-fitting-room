@@ -3,7 +3,7 @@ name: Adjust title and counter stamp
 on:
   push:
     paths:
-      - '.github/title-stamp-trigger-v1'
+      - '.github/workflows/adjust-title-stamp-v1.yml'
 
 permissions:
   contents: write
