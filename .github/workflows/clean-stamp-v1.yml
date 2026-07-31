@@ -1,0 +1,112 @@
+name: Clean stamp layout
+
+on:
+  push:
+    paths:
+      - '.github/clean-stamp-trigger-v1'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Clean old capsule CSS and shorten stamp
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+
+          old_block = re.compile(
+              r'\n\s*/\* soft-pink stamp and glass widgets v4 \*/.*?(?=\n\s*/\* soft-pink structural counter fix v1 \*/)',
+              re.S,
+          )
+          text, removed = old_block.subn('\n\n', text, count=1)
+          if removed != 1:
+              raise SystemExit(f'old v4 block matches: {removed}')
+
+          old_height = '''body.theme-soft-pink .counter-stamp-slot{
+            position:absolute;
+            top:0;
+            left:7%;
+            width:86%;
+            height:38%;'''
+          new_height = '''body.theme-soft-pink .counter-stamp-slot{
+            position:absolute;
+            top:0;
+            left:7%;
+            width:86%;
+            height:32%;'''
+          if old_height not in text:
+              raise SystemExit('counter slot block not found')
+          text = text.replace(old_height, new_height, 1)
+
+          anchor = '''body.theme-soft-pink .primary-widget-bottom{
+            bottom:0 !important;
+            height:54% !important;
+            z-index:1;
+          }
+          '''
+          clean_bottom = '''body.theme-soft-pink .primary-widget-bottom{
+            bottom:0 !important;
+            height:54% !important;
+            z-index:1;
+            border-radius:clamp(20px,4.5vw,28px) !important;
+            border:1px solid rgba(255,255,255,.40) !important;
+            background:
+              linear-gradient(180deg,rgba(255,255,255,.25),rgba(255,255,255,.08) 60%,rgba(255,255,255,.03)),
+              rgba(255,255,255,.13) !important;
+            box-shadow:0 10px 25px rgba(98,99,105,.08),inset 0 1px 0 rgba(255,255,255,.34) !important;
+            backdrop-filter:blur(15px) saturate(1.08) !important;
+            -webkit-backdrop-filter:blur(15px) saturate(1.08) !important;
+            overflow:hidden !important;
+          }
+
+          body.theme-soft-pink .primary-widget-bottom > *{
+            display:none !important;
+          }
+
+          body.theme-soft-pink .primary-widget-bottom::before{
+            content:'WeChat' !important;
+            display:block !important;
+            position:absolute;
+            top:clamp(13px,2.4vw,18px);
+            left:clamp(16px,3vw,21px);
+            color:rgba(65,61,64,.70);
+            font-size:clamp(14px,2.8vw,18px);
+            font-weight:600;
+            line-height:1;
+            letter-spacing:.03em;
+          }
+
+          body.theme-soft-pink .primary-widget-bottom::after{
+            content:none !important;
+            display:none !important;
+          }
+          '''
+          if anchor not in text:
+              raise SystemExit('wechat block not found')
+          text = text.replace(anchor, clean_bottom, 1)
+
+          if 'primary-widget-top m' in text:
+              raise SystemExit('old capsule DOM still exists')
+          if 'soft-pink stamp and glass widgets v4' in text:
+              raise SystemExit('old v4 CSS still exists')
+
+          p.write_text(text, encoding='utf-8')
+          PY
+      - name: Remove temporary workflow files
+        run: |
+          git rm -f .github/workflows/clean-stamp-v1.yml .github/clean-stamp-trigger-v1
+      - name: Commit clean result
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Clean old capsule CSS and shorten counter stamp"
+          git push
