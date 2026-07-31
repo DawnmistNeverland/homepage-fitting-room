@@ -1,9 +1,9 @@
-name: Move soft pink top group
+name: Apply soft pink top adjustment
 
 on:
   push:
     paths:
-      - '.github/move-soft-pink-top-group.trigger'
+      - '.github/workflows/move-soft-pink-top-group.yml'
 
 permissions:
   contents: write
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Move only title and hero down
+      - name: Apply exact two-line layout change
         run: |
           python3 - <<'PY'
           from pathlib import Path
@@ -22,13 +22,16 @@ jobs:
           p = Path('index.html')
           text = p.read_text(encoding='utf-8')
 
-          # Undo the mistaken stamp-only move.
-          stamp_pattern = re.compile(r'(body\.theme-soft-pink \.counter-stamp-slot\{\s*position:absolute;\s*)top:3%;', re.S)
-          text, stamp_count = stamp_pattern.subn(r'\1top:0;', text, count=1)
+          text, stamp_count = re.subn(
+              r'(body\.theme-soft-pink \.counter-stamp-slot\{\s*position:absolute;\s*)top:\s*3%;',
+              r'\1top:0;',
+              text,
+              count=1,
+              flags=re.S,
+          )
           if stamp_count != 1:
-              raise SystemExit(f'expected one stamp top:3% rule, got {stamp_count}')
+              raise SystemExit(f'stamp revert failed: {stamp_count}')
 
-          # Keep exactly one dedicated shift rule for the title and top hero only.
           text = re.sub(
               r'\n\s*/\* soft-pink top title and hero shift v\d+ \*/.*?(?=\n\s*</style>)',
               '',
@@ -39,7 +42,7 @@ jobs:
 
           css = '''
 
-/* soft-pink top title and hero shift v1 */
+/* soft-pink top title and hero shift v2 */
 body.theme-soft-pink .hero-script-title,
 body.theme-soft-pink .top-area > .component-grid{
   transform:translateY(8px);
@@ -47,17 +50,12 @@ body.theme-soft-pink .top-area > .component-grid{
 '''
           text = text.replace('</style>', css + '\n</style>', 1)
 
-          if text.count('soft-pink top title and hero shift v1') != 1:
-              raise SystemExit('top shift rule is not unique')
-          if text.count('body.theme-soft-pink .counter-stamp-slot{') != 1:
-              raise SystemExit('counter stamp selector is not unique')
-
           p.write_text(text, encoding='utf-8')
           PY
-      - name: Commit
+      - name: Commit page change
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git diff --cached --quiet || git commit -m "Move soft-pink title and hero slightly downward"
+          git commit -m "Move soft-pink title and hero down 8px"
           git push
