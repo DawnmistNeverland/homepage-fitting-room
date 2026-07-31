@@ -1,0 +1,61 @@
+name: Adjust title and counter stamp
+
+on:
+  push:
+    paths:
+      - '.github/title-stamp-trigger-v1'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Left align title and shrink stamp
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          marker = '/* soft-pink title-left stamp-small v1 */'
+          css = r'''
+
+          /* soft-pink title-left stamp-small v1 */
+          body.theme-soft-pink .hero-script-title{
+            text-align:left !important;
+            padding-left:clamp(2px,.8vw,6px);
+          }
+
+          body.theme-soft-pink .primary-widget-top{
+            left:6% !important;
+            width:88% !important;
+            height:34% !important;
+            top:1% !important;
+            transform:none !important;
+          }
+
+          body.theme-soft-pink .primary-widget-top .hero-counter-stage{
+            width:100% !important;
+            height:100% !important;
+          }
+
+          body.theme-soft-pink .primary-widget-bottom{
+            bottom:0 !important;
+            height:56% !important;
+          }
+          '''
+
+          if marker not in text:
+              text = text.replace('</style>', css + '\n</style>', 1)
+              p.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Left align title and shrink counter stamp"
+          git push
