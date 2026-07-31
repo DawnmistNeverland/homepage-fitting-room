@@ -1,0 +1,57 @@
+name: Fix counter stamp clipping
+
+on:
+  push:
+    paths:
+      - '.github/stamp-unclip-trigger-v1'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prevent stamp clipping
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          marker = '/* soft-pink stamp unclip v1 */'
+          css = r'''
+
+          /* soft-pink stamp unclip v1 */
+          body.theme-soft-pink .primary-widget-stack,
+          body.theme-soft-pink .primary-widget-top,
+          body.theme-soft-pink .primary-widget-top .hero-counter-stage,
+          body.theme-soft-pink .primary-widget-top .hero-counter{
+            overflow:visible !important;
+          }
+
+          body.theme-soft-pink .primary-widget-top{
+            top:4% !important;
+            left:8% !important;
+            width:84% !important;
+            height:32% !important;
+          }
+
+          body.theme-soft-pink .primary-widget-bottom{
+            bottom:0 !important;
+            height:56% !important;
+          }
+          '''
+
+          if marker not in text:
+              text = text.replace('</style>', css + '\n</style>', 1)
+              p.write_text(text, encoding='utf-8')
+          PY
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Prevent counter stamp clipping"
+          git push
